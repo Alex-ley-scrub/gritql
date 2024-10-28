@@ -2945,7 +2945,7 @@ fn apply_to_folder_with_nested_gitignore() -> Result<()> {
     println!("stdout: {:?}", stdout);
 
     assert!(result.status.success(), "Command failed");
-    // Read back the file1.pyi file to ensure it was processed
+    // Read back the file2.pyi file to ensure it was processed
     let target_file = fixture_dir.join("src/module1/file2.pyi");
     let content: String = fs_err::read_to_string(target_file)?;
     assert_snapshot!(content);
@@ -2974,7 +2974,7 @@ fn apply_to_folder_with_nested_gitignore() -> Result<()> {
     println!("stdout: {:?}", stdout);
 
     assert!(result.status.success(), "Command failed");
-    // Read back the file1.pyi file to ensure it was NOT processed
+    // Read back the file2.pyi file to ensure it was NOT processed
     let target_file = fixture_dir.join("src/module2/file2.pyi");
     let content: String = fs_err::read_to_string(target_file)?;
     assert_snapshot!(content);

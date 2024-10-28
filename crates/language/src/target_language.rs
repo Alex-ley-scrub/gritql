@@ -36,9 +36,12 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::hash::Hash;
+use std::path::Path;
 
 #[cfg(feature = "finder")]
 use anyhow::Error;
+#[cfg(feature = "finder")]
+use git2::Repository;
 #[cfg(feature = "finder")]
 use ignore::{types::TypesBuilder, Walk, WalkBuilder};
 #[cfg(feature = "finder")]
@@ -414,6 +417,41 @@ impl PatternLanguage {
     }
 }
 
+pub fn find_repo_root(start_path: &Path) -> Result<PathBuf, git2::Error> {
+    let repo = Repository::discover(start_path)?;
+    let repo_root = repo
+        .workdir()
+        .ok_or_else(|| git2::Error::from_str("Failed to find repository root"))?;
+    Ok(repo_root.to_path_buf())
+}
+
+#[cfg(feature = "finder")]
+pub fn configure_walk_builder_with_gitignore(
+    start_path: &Path,
+    walk_builder: &mut WalkBuilder,
+) -> Result<()> {
+    let repo_root = match find_repo_root(start_path) {
+        Ok(root) => root,
+        Err(_) => return Ok(()), // Proceed without .gitignore files if not in a repo
+    };
+
+    let mut current_path = start_path.to_path_buf();
+    while let Some(parent) = current_path.parent() {
+        let gitignore_path = parent.join(".gitignore");
+        if gitignore_path.exists() {
+            // https://docs.rs/ignore/latest/ignore/struct.WalkBuilder.html#method.add_ignore
+            walk_builder.add_ignore(gitignore_path);
+        }
+        if parent == repo_root {
+            // Stop at the repo root, we don't want to traverse above it
+            break;
+        }
+        current_path = parent.to_path_buf();
+    }
+
+    Ok(())
+}
+
 #[cfg(feature = "finder")]
 pub fn expand_paths(
     start_paths: &[PathBuf],
@@ -453,6 +491,8 @@ pub fn expand_paths(
     for path in start_paths.iter().skip(1) {
         file_walker.add(path);
     }
+    // https://github.com/getgrit/gritql/issues/539
+    configure_walk_builder_with_gitignore(&start_paths[0], &mut file_walker)?;
     file_walker.add_custom_ignore_filename(PathBuf::from_str(".gritignore")?);
 
     let grit = OverrideBuilder::new(".").add("!**/.grit/**")?.build()?;

@@ -46,6 +46,15 @@ ignore = { version = "0.4.21", optional = true }
 web-sys = { version = "0.3.66", features = ["console"], optional = true }
 enum_dispatch = { version = "0.3.12" }
 clap = { version = "4.1.13", features = ["derive"] }
+git2 = { version = "0.19.0", default-features = false, optional = true, features = [
+    "vendored-openssl",
+    "vendored-libgit2",
+    "ssh",
+    "https",
+] }
+
+[target.'cfg(not(windows))'.dependencies]
+openssl = { version = "0.10", features = ["vendored"], optional = true }
 
 [dev-dependencies]
 trim-margin = "0.1.0"
@@ -76,4 +85,4 @@ builtin-parser = [
     "tree-sitter-php",
 ]
 grit-parser = []
-finder = ["ignore"]
+finder = ["ignore", "git2", "openssl"]

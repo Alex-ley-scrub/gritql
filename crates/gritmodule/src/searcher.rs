@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Result};
-use ignore::Walk;
+use ignore::WalkBuilder;
 use std::borrow::Cow;
 use std::path::Path;
 use std::path::PathBuf;
@@ -16,6 +16,7 @@ use crate::{
     fetcher::ModuleRepo,
     parser::{get_patterns_from_file, PatternFileExt},
 };
+use marzano_language::target_language::configure_walk_builder_with_gitignore;
 
 pub async fn collect_from_file(
     path: &Path,
@@ -49,7 +50,11 @@ pub async fn collect_patterns(
 
     let mut file_readers = Vec::new();
 
-    let walker = Walk::new(patterns_path);
+    // https://github.com/getgrit/gritql/issues/539
+    let mut walk_builder = WalkBuilder::new(&patterns_path);
+    configure_walk_builder_with_gitignore(&patterns_path, &mut walk_builder)?;
+
+    let walker = walk_builder.build();
     for entry in walker {
         match entry {
             Err(e) => {
