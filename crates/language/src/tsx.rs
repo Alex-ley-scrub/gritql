@@ -454,4 +454,20 @@ mod tests {
         println!("{:#?}", nodes);
         assert!(!nodes.is_empty());
     }
+
+    #[test]
+    fn tsx_component_with_string_prop() {
+        let snippet =
+            r#"return (<OtherComponent value="users_import">Hello World</OtherComponent>);"#;
+        let lang = Tsx::new(None);
+        let mut parser = tree_sitter::Parser::new().unwrap();
+        parser.set_language(lang.get_ts_language()).unwrap();
+        let snippets = lang.parse_snippet_contexts(snippet);
+        let nodes = nodes_from_indices(&snippets);
+        println!("{:#?}", nodes);
+        nodes.iter().for_each(|n| {
+            n.print_node_tree();
+        });
+        assert!(!nodes.is_empty());
+    }
 }
