@@ -204,4 +204,17 @@ mod tests {
         println!("nodes: {:#?}", nodes);
         assert!(!nodes.is_empty());
     }
+
+    #[test]
+    fn func_with_return_type_snippet() {
+        let snippet = "def matching_method(one: str) -> str: pass";
+        let lang = Python::new(None);
+        let snippets = lang.parse_snippet_contexts(snippet);
+        let nodes = nodes_from_indices(&snippets);
+        println!("nodes: {:#?}", nodes);
+        nodes.iter().for_each(|n| {
+            n.print_node_tree();
+        });
+        assert!(!nodes.is_empty());
+    }
 }
