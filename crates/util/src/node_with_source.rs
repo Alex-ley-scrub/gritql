@@ -71,10 +71,13 @@ impl<'a> NodeWithSource<'a> {
     }
 
     pub fn print_node_tree(&self) {
+        let source = self.source;
         let mut stack = vec![(self.node.clone(), 0)];
         while let Some((node, depth)) = stack.pop() {
             let sort_id = node.kind_id();
-            println!("{:indent$}{}: {:?}", "", sort_id, node, indent = depth * 2);
+            let source_slice = &source[node.start_byte() as usize..node.end_byte() as usize];
+            let indent = depth * 2;
+            println!("{:indent$}{}: {:?}: {}", "", sort_id, node, source_slice);
             for i in (0..node.child_count()).rev() {
                 if let Some(child) = node.child(i) {
                     stack.push((child, depth + 1));
